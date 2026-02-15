@@ -129,11 +129,21 @@ def extract_ad_fields(raw: dict[str, Any]) -> dict[str, Any]:
         if isinstance(name, str) and name.strip():
             out["dealer_name"] = name.strip()
 
-    # --- Flags (top-level booleans in Trader API) ---
-    if isinstance(raw.get("isNewCar"), bool):
-        out["is_new_car"] = raw["isNewCar"]
-    if isinstance(raw.get("isTaxi"), bool):
-        out["is_taxi"] = raw["isTaxi"]
+    # --- Flags (top-level OR nested in details) ---
+    # Try top-level first, then fall back to details
+    is_new = raw.get("isNewCar")
+    if is_new is None and isinstance(details, dict):
+        is_new = details.get("isNewCar")
+    
+    if isinstance(is_new, bool):
+        out["is_new_car"] = is_new
+
+    is_taxi = raw.get("isTaxi")
+    if is_taxi is None and isinstance(details, dict):
+        is_taxi = details.get("isTaxi")
+
+    if isinstance(is_taxi, bool):
+        out["is_taxi"] = is_taxi
 
     # Remove None values — keep the output clean
     return {k: v for k, v in out.items() if v is not None}
