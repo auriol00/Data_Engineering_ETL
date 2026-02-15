@@ -38,22 +38,22 @@ with DAG(
     # --pages 3 = fetch 3 pages × 20 listings = 60 listings per run
     extract = BashOperator(
         task_id="extract",
-        bash_command=f"cd {PROJECT} && python -m src.pipeline.cli extract --pages 3",
+        bash_command=f"cd {PROJECT} && python -m src.pipeline.run_pipeline extract --pages 3",
     )
 
     transform = BashOperator(
         task_id="transform",
-        bash_command=f"cd {PROJECT} && python -m src.pipeline.cli transform",
+        bash_command=f"cd {PROJECT} && python -m src.pipeline.run_pipeline transform",
     )
 
     load = BashOperator(
         task_id="load",
-        bash_command=f"cd {PROJECT} && python -m src.pipeline.cli load",
+        bash_command=f"cd {PROJECT} && python -m src.pipeline.run_pipeline load",
     )
 
     analyze = BashOperator(
         task_id="analyze",
-        bash_command=f"cd {PROJECT} && python -m src.pipeline.cli analyze",
+        bash_command=f"cd {PROJECT} && python -m src.pipeline.run_pipeline analyze",
     )
 
     extract >> transform >> load >> analyze
