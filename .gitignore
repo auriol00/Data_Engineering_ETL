@@ -1,0 +1,46 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# -------------------------
+# Virtual environments
+# -------------------------
+.venv/
+venv/
+
+# -------------------------
+# Secrets
+# -------------------------
+.env
+.env.*
+
+# -------------------------
+# Pipeline runtime data (reproducible)
+# -------------------------
+data/raw/
+data/staging/
+analysis/output/
+debug/
+logs/
+*.log
+
+# -------------------------
+# OS / Editor
+# -------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# -------------------------
+# Airflow local state
+# -------------------------
+airflow.db
+airflow.cfg
+webserver_config.py

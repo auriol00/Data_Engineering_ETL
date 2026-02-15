@@ -1,0 +1,128 @@
+services:
+  # -------------------------------------------------------------------------
+  # 1. Project Database — stores scraped car data
+  # -------------------------------------------------------------------------
+  postgres_heycar:
+    image: postgres:16
+    container_name: heycar_postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_heycar:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------------------------
+  # 2. Airflow Metadata Database — internal bookkeeping
+  # -------------------------------------------------------------------------
+  postgres:
+    image: postgres:16
+    container_name: airflow_postgres
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      TZ: Europe/Berlin
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata_airflow:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # -------------------------------------------------------------------------
+  # 3. Airflow Init — runs once to set up the DB and admin user
+  # -------------------------------------------------------------------------
+  airflow-init:
+    <<: &airflow-common
+      build:
+        context: .
+        dockerfile: Dockerfile.airflow
+      env_file: .env
+      environment:
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+        AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "False"
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_URL}
+        TZ: Europe/Berlin
+        AIRFLOW__CORE__DEFAULT_TIMEZONE: Europe/Berlin
+        AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: Europe/Berlin
+        PYTHONPATH: /opt/airflow/project
+        DATABASE_URL: ${DATABASE_URL}
+        DB_HOST: ${DB_HOST}
+        DB_PORT: ${DB_PORT}
+        DB_NAME: ${DB_NAME}
+        DB_USER: ${DB_USER}
+        DB_PASSWORD: ${DB_PASSWORD}
+        DB_SCHEMA: ${DB_SCHEMA}
+        RAW_DIR: ${RAW_DIR}
+        SCRAPE_CONCURRENCY: ${SCRAPE_CONCURRENCY}
+        SCRAPE_TIMEOUT_SEC: ${SCRAPE_TIMEOUT_SEC}
+        SCRAPE_USER_AGENT: ${SCRAPE_USER_AGENT}
+      volumes:
+        - ./dags:/opt/airflow/dags
+        - airflow_logs:/opt/airflow/logs
+        - ./:/opt/airflow/project
+        - ./analysis/output:/opt/airflow/project/analysis/output
+      depends_on:
+        postgres:
+          condition: service_healthy
+        postgres_heycar:
+          condition: service_healthy
+    container_name: airflow_init
+    command: >
+      bash -c '
+        airflow db migrate &&
+        airflow users create \
+          --username "${AIRFLOW_ADMIN_USER}" \
+          --password "${AIRFLOW_ADMIN_PASSWORD}" \
+          --firstname Admin --lastname User \
+          --role Admin --email "${AIRFLOW_ADMIN_EMAIL}" \
+        || true
+      '
+    restart: "no"
+
+  # -------------------------------------------------------------------------
+  # 4. Airflow Webserver — UI at http://localhost:8080
+  # -------------------------------------------------------------------------
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow_webserver
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    command: bash -c "airflow webserver"
+
+  # -------------------------------------------------------------------------
+  # 5. Airflow Scheduler — triggers DAG runs on schedule
+  # -------------------------------------------------------------------------
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow_scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    command: bash -c "airflow scheduler"
+
+volumes:
+  pgdata_heycar:
+  pgdata_airflow:
+  airflow_logs:
+
+networks:
+  default:
+    name: heycar_net

@@ -1,0 +1,34 @@
+# Git & metadata
+.git
+.gitignore
+
+# Secrets
+.env
+.env.*
+
+# Python caches
+__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments (CRITICAL for build speed & Windows compat)
+.venv
+.venv/
+venv
+venv/
+ENV
+env/
+
+# Local outputs (mounted as volumes anyway)
+data/
+analysis/output/
+logs/
+debug/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
