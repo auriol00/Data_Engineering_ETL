@@ -20,7 +20,6 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
-# Internal Heycar API — same endpoint the website frontend calls
 TRADER_BASE = "https://api.uk.prod.group-mobility-trader.com"
 HEYCAR_BASE = "https://heycar.com"
 

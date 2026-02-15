@@ -18,7 +18,6 @@ venv/
 # Secrets
 # -------------------------
 .env
-.env.*
 
 # -------------------------
 # Pipeline runtime data (reproducible)
