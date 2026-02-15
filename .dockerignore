@@ -4,7 +4,6 @@
 
 # Secrets
 .env
-.env.*
 
 # Python caches
 __pycache__
