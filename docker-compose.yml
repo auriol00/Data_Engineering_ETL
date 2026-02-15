@@ -22,6 +22,17 @@ services:
       retries: 20
 
   # -------------------------------------------------------------------------
+  # 0. Permission Fixer — ensures data dirs are writable by Airflow (UID 50000)
+  # -------------------------------------------------------------------------
+  fix-perms:
+    image: alpine:latest
+    container_name: airflow_fix_perms
+    command: sh -c "mkdir -p /opt/airflow/project/data/raw /opt/airflow/project/data/staging /opt/airflow/project/analysis/output && chmod -R 777 /opt/airflow/project/data /opt/airflow/project/analysis"
+    volumes:
+      - ./:/opt/airflow/project
+    restart: "no"
+
+  # -------------------------------------------------------------------------
   # 2. Airflow Metadata Database — internal bookkeeping
   # -------------------------------------------------------------------------
   postgres:
@@ -81,6 +92,8 @@ services:
           condition: service_healthy
         postgres_heycar:
           condition: service_healthy
+        fix-perms:
+          condition: service_completed_successfully
     container_name: airflow_init
     command: >
       bash -c '

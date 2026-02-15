@@ -84,6 +84,7 @@ Das Projekt läuft vollständig in Docker. Vier Container arbeiten zusammen:
 
 | Container | Image | Aufgabe |
 |---|---|---|
+| `fix-perms` | `alpine` | **Init-Helfer** — Stellt sicher, dass Datenverzeichnisse existieren und für Airflow beschreibbar sind |
 | `heycar_postgres` | `postgres:16` | **Projekt-Datenbank** — speichert alle gescrapten Daten (raw_data, vehicle, listing, price_history) |
 | `airflow_postgres` | `postgres:16` | **Airflow-Metadaten-Datenbank** — speichert DAG-Run-Verlauf, Task-Status, Logs und Scheduler-Verwaltung |
 | `airflow-webserver` | Custom (Dockerfile.airflow) | **Airflow-Weboberfläche** — Web-Interface zum Überwachen und Auslösen von Pipeline-Runs (Port 8080) |
@@ -173,8 +174,11 @@ cd -Data-Engineering-Pipeline
 cp .env.example .env
 ```
 
-Die Standardwerte funktionieren sofort für die lokale Entwicklung — Änderungen
-sind nur nötig, wenn man eigene Passwörter verwenden möchte.
+Die Standardwerte funktionieren sofort für die lokale Entwicklung.
+
+> **Hinweis:** Beim ersten Start erstellt ein Hilfs-Container (`airflow_fix_perms`)
+> automatisch die benötigten Datenverzeichnisse (`data/raw`, `analysis/output` usw.)
+> und setzt die korrekten Berechtigungen, damit Airflow schreiben kann.
 
 ### Schritt 3: Alle Services bauen und starten
 
