@@ -14,16 +14,23 @@ from sqlalchemy.orm import sessionmaker
 
 def _build_db_url() -> str:
     """Build the PostgreSQL connection URL from environment variables."""
+    # Prioritize building from components to allow overrides (e.g. DB_HOST=localhost)
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    name = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    pwd = os.getenv("DB_PASSWORD")
+
+    if host and port and name and user and pwd:
+        return f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{name}"
+
+    # Fallback to full URL if components are missing
     direct = os.getenv("DATABASE_URL")
     if direct:
         return direct
 
-    host = os.getenv("DB_HOST", "postgres_heycar")
-    port = os.getenv("DB_PORT", "5432")
-    name = os.getenv("DB_NAME", "heycar")
-    user = os.getenv("DB_USER", "heycar")
-    pwd = os.getenv("DB_PASSWORD", "heycar")
-    return f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{name}"
+    # Defaults if nothing is set (fallback to Docker defaults)
+    return "postgresql+psycopg2://heycar:heycar@postgres_heycar:5432/heycar"
 
 
 @lru_cache(maxsize=1)

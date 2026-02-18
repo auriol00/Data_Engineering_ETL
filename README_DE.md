@@ -207,11 +207,14 @@ docker compose exec airflow-webserver bash
 # Zum Projekt navigieren
 cd /opt/airflow/project
 
-# Jeden Schritt einzeln ausführen
-python -m src.pipeline.run_pipeline extract --pages 2   # 2 Seiten × 20 = 40 Inserate
-python -m src.pipeline.run_pipeline transform
-python -m src.pipeline.run_pipeline load
-python -m src.pipeline.run_pipeline analyze
+# Innerhalb des Containers ausführen (Empfohlen)
+docker compose exec airflow-webserver python -m src.pipeline.cli extract --pages 2
+docker compose exec airflow-webserver python -m src.pipeline.cli transform
+docker compose exec airflow-webserver python -m src.pipeline.cli load
+docker compose exec airflow-webserver python -m src.pipeline.cli analyze
+
+# ODER lokal auf dem Host ausführen (benötigt DB_HOST Override)
+# DB_HOST=localhost python3 -m src.pipeline.cli extract --pages 2
 ```
 
 ### Schritt 6: Ergebnisse ansehen

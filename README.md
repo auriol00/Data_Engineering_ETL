@@ -201,17 +201,14 @@ or you can trigger it manually by clicking the ▶ play button.
 ### Step 5 (optional): Run steps manually
 
 ```bash
-# Open a shell inside the Airflow container
-docker compose exec airflow-webserver bash
+# Run inside the container (Recommended)
+docker compose exec airflow-webserver python -m src.pipeline.cli extract --pages 2
+docker compose exec airflow-webserver python -m src.pipeline.cli transform
+docker compose exec airflow-webserver python -m src.pipeline.cli load
+docker compose exec airflow-webserver python -m src.pipeline.cli analyze
 
-# Navigate to the project
-cd /opt/airflow/project
-
-# Run each step individually
-python -m src.pipeline.run_pipeline extract --pages 2   # 2 pages × 20 = 40 listings
-python -m src.pipeline.run_pipeline transform
-python -m src.pipeline.run_pipeline load
-python -m src.pipeline.run_pipeline analyze
+# OR run locally on host (requires DB_HOST override)
+# DB_HOST=localhost python3 -m src.pipeline.cli extract --pages 2
 ```
 
 ### Step 6: View the results
